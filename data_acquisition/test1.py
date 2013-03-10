@@ -7,7 +7,7 @@ test1 is a description
 '''
 
 from PIL import Image, ImageDraw
-from numpy import array, concatenate, asarray
+import numpy as np
 import os
 import sys
 
@@ -26,9 +26,11 @@ bbox=(min_lon, min_lat, max_lon, max_lat)=(11.60339,48.17708,11.61304,48.18326) 
 #size=(1000, 1000)
 size=(1500, 1000)
 
-patch_size=20
+patch_size=96
 
-if not os.path.exists("dop.png") or False:
+force_refresh = False;
+
+if not os.path.exists("dop.png") or force_refresh:
     from owslib.wms import WebMapService
     wms = WebMapService('http://geodaten.bayern.de/ogc/ogc_dop200_oa.cgi?', version='1.1.1')
     
@@ -58,16 +60,24 @@ else:
 
 
 
-query = '[out:json];way["building"](' + str(min_lat) + ',' + str(min_lon) + ',' + str(max_lat) + ',' + str(max_lon) + ');out qt body;>;out skel;'
+if not os.path.exists("osm-data.json") or force_refresh:
 
-import urllib
-url = 'http://overpass-api.de/api/interpreter?data=' + urllib.quote_plus(query)
+    query = '[out:json];way["building"](' + str(min_lat) + ',' + str(min_lon) + ',' + str(max_lat) + ',' + str(max_lon) + ');out qt body;>;out skel;'
+    import urllib
+    url = 'http://overpass-api.de/api/interpreter?data=' + urllib.quote_plus(query)
+    
+    import urllib2
+    
+    json_file = urllib2.urlopen(url)
+    f = open('osm-data.json', 'w')
+    f.write(json_file.read())
+    f.close()
 
-import json
-import urllib2
 
+json_file = open('osm-data.json', 'r')
 print "parsing json document"
-data = json.load(urllib2.urlopen(url))
+import json
+data = json.load(json_file)
 
 
 scale = (
@@ -100,16 +110,8 @@ for element in data['elements']:
 
 #import rtree
 
-
-img_raw = img.copy()
-
-draw = ImageDraw.Draw(img) 
-
-draw.rectangle([100, 100, 120, 120], fill='blue')
-
-
 try:
-    os.mkdir('patches')
+    os.mkdir('patches'+str(patch_size))
 except:
     None
 
@@ -117,34 +119,48 @@ import shapely.geometry
 
 print "doing buildings processing"
 
-buildings_multipolygon = []
+
+img_raw = img.copy()
+draw = ImageDraw.Draw(img) 
+bmap = Image.new('1', size, 0)
+bdraw = ImageDraw.Draw(bmap)
 
 for building in buildings:
     sys.stdout.write('.')
-    linearring = [nodes[node_id] for node_id in building['nodes']];
-    area = shapely.geometry.Polygon(linearring)
+    ring = [nodes[node_id] for node_id in building['nodes']];
+    area = shapely.geometry.Polygon(ring)
     draw.rectangle(area.bounds, outline='blue') 
-    draw.polygon(linearring, outline='red')
+    draw.polygon(ring, outline='red')
+    bdraw.polygon(ring, fill=1)
     center = area.representative_point()
-    patch_box = center.buffer(patch_size, resolution=1)    
-    #patch_box = list(concatenate((center-patch_size/2, center+patch_size/2)).astype(int))
-    
-    # TODO check if center or patchbox is outside of the image
-
-    
-    draw.rectangle(asarray(patch_box), outline='green')
-    #patch = img_raw.crop(patch_box)
-    #patch.save('patches/' + str(building['id']) + '_c.png')
 
 
-patch = shapely.geometry.box(0, 0, patch_size, patch_size);
 
-for x in range(0,size[0],patch_size):
-    for y in range(0,size[1],patch_size):    
-    
+for x in xrange(0,size[0],patch_size):
+    for y in xrange(0,size[1],patch_size):  
+        box = [x, y, x+patch_size, y+patch_size]
+        
+        #calculate coverage: how many pixels in current patch are part of a building?
+        patch = bmap.crop(box)
+        pixel = patch.load()
+        result = 0
+        for i in range(0, patch_size):
+            for j in range(0, patch_size):
+                result += pixel[i, j]
+        coverage = result / float(patch_size**2)
+        if (coverage != 0.0) and (coverage != 1.0): 
+            patch.save('patches{size}/{coverage:.3f}_{x:04d}_{y:04d}_mask.png'.format(x=x, y=y, coverage=coverage,size=patch_size))
+            
+        #draw.rectangle(box, fill=0xffffff ) 
+        #crop patch and save to file
+        patch = img_raw.crop(box)
+        patch.save('patches{size}/{coverage:.3f}_{x:04d}_{y:04d}.png'.format(x=x, y=y, coverage=coverage,size=patch_size))
+        
 
-img.show()        
-    
+
+#img.show()  
+#bmap.show()      
+print "done"    
 
 #import pdb; pdb.set_trace()
 
