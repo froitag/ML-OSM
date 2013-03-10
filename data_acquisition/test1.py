@@ -7,7 +7,9 @@ test1 is a description
 '''
 
 from PIL import Image, ImageDraw
-from numpy import array, concatenate
+from numpy import array, concatenate, asarray
+import os
+import sys
 
 '''
 from pyproj import Proj
@@ -24,9 +26,9 @@ bbox=(min_lon, min_lat, max_lon, max_lat)=(11.60339,48.17708,11.61304,48.18326) 
 #size=(1000, 1000)
 size=(1500, 1000)
 
-patch_size=array([20, 20])
+patch_size=20
 
-if False:
+if not os.path.exists("dop.png") or False:
     from owslib.wms import WebMapService
     wms = WebMapService('http://geodaten.bayern.de/ogc/ogc_dop200_oa.cgi?', version='1.1.1')
     
@@ -105,41 +107,40 @@ draw = ImageDraw.Draw(img)
 
 draw.rectangle([100, 100, 120, 120], fill='blue')
 
-import os
+
 try:
     os.mkdir('patches')
 except:
     None
 
+import shapely.geometry
+
+print "doing buildings processing"
+
+buildings_multipolygon = []
 
 for building in buildings:
-    area = [];
-    box = [None, None, None, None];
-    for node_id in building['nodes']:
-        coords = nodes[node_id]
-        area.append(coords)
-        # update bounding box
-        if (box[0] is None) or (coords[0] < box[0]):
-            box[0] = coords[0]
-        if (box[1] is None) or (coords[1] < box[1]):
-            box[1] = coords[1]
-        if coords[0] > box[2]:
-            box[2] = coords[0]
-        if coords[1] > box[3]:
-            box[3] = coords[1]
-   
-    draw.rectangle(box, outline='blue') 
-    draw.polygon(area, outline='red')
-    center = array([(box[0]+box[2])/2, (box[1]+box[3])/2])    
-    patch_box = list(concatenate((center-patch_size/2, center+patch_size/2)).astype(int))
+    sys.stdout.write('.')
+    linearring = [nodes[node_id] for node_id in building['nodes']];
+    area = shapely.geometry.Polygon(linearring)
+    draw.rectangle(area.bounds, outline='blue') 
+    draw.polygon(linearring, outline='red')
+    center = area.representative_point()
+    patch_box = center.buffer(patch_size, resolution=1)    
+    #patch_box = list(concatenate((center-patch_size/2, center+patch_size/2)).astype(int))
     
     # TODO check if center or patchbox is outside of the image
 
     
-    draw.rectangle(patch_box, outline='green')
-    patch = img_raw.crop(patch_box)
-    patch.save('patches/' + str(building['id']) + '_c.png')
-   
+    draw.rectangle(asarray(patch_box), outline='green')
+    #patch = img_raw.crop(patch_box)
+    #patch.save('patches/' + str(building['id']) + '_c.png')
+
+
+patch = shapely.geometry.box(0, 0, patch_size, patch_size);
+
+for x in range(0,size[0],patch_size):
+    for y in range(0,size[1],patch_size):    
     
 
 img.show()        
