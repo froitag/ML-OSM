@@ -136,8 +136,8 @@ for building in buildings:
 
 
 
-for x in xrange(0,size[0],patch_size):
-    for y in xrange(0,size[1],patch_size):  
+for x in xrange(0, size[0]-patch_size, patch_size):
+    for y in xrange(0, size[1]-patch_size, patch_size):  
         box = [x, y, x+patch_size, y+patch_size]
         
         #calculate coverage: how many pixels in current patch are part of a building?
@@ -148,10 +148,11 @@ for x in xrange(0,size[0],patch_size):
             for j in range(0, patch_size):
                 result += pixel[i, j]
         coverage = result / float(patch_size**2)
+        #save mask for the not extreme cases
         if (coverage != 0.0) and (coverage != 1.0): 
-            patch.save('patches{size}/{coverage:.3f}_{x:04d}_{y:04d}_mask.png'.format(x=x, y=y, coverage=coverage,size=patch_size))
-            
+            patch.save('patches{size}/{coverage:.3f}_{x:04d}_{y:04d}_mask.png'.format(x=x, y=y, coverage=coverage,size=patch_size))    
         #draw.rectangle(box, fill=0xffffff ) 
+        
         #crop patch and save to file
         patch = img_raw.crop(box)
         patch.save('patches{size}/{coverage:.3f}_{x:04d}_{y:04d}.png'.format(x=x, y=y, coverage=coverage,size=patch_size))
@@ -159,7 +160,8 @@ for x in xrange(0,size[0],patch_size):
 
 
 #img.show()  
-#bmap.show()      
+#bmap.show() 
+print ""     
 print "done"    
 
 #import pdb; pdb.set_trace()
