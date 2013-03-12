@@ -12,8 +12,8 @@ from os.path import basename, join, splitext
 import scipy.cluster.vq as vq
 from sklearn import svm
 import cPickle
-import learn
 import numpy
+import learn_real
 import os
 
 BATCH_SIZE=50
@@ -110,11 +110,12 @@ def compute_histograms(sift_features_dir, codebook_file, DUMP_TO_DIR, batch_size
     return
 
 
-def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO):
+def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None):
     files = __get_histogram_batches_from_dir(histogram_dir)
     
     samples = []
     labels = []
+    weights = []
     
     for hfile in files:
         with open(hfile, "rb") as f:
@@ -122,6 +123,7 @@ def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO):
         for h in hbatch:
             samples.append(hbatch[h])
             labels.append(all_labels[h])
+            weights.append(all_weights[h] if all_weights!=None and h in all_weights else 1)
         
     clf = svm.SVC(kernel='rbf') #kernel='linear'    
     clf.gamma = 1
@@ -133,7 +135,7 @@ def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO):
 
 def predict(svm_model_file, codebook_file, img_dir, tmp_dir):
     # list all files
-    files = learn.get_imgfiles(img_dir)
+    files = learn_real.get_imgfiles(img_dir)
     
     # extract sift features
     extract_features(files, tmp_dir)
@@ -192,7 +194,10 @@ def __get_histogram_batches_from_dir(d):
 
 def __get_files_from_dir(d, extension):
     files = []
-    files.extend([join(d, basename(fname))
+    files.extend([join(d, basename(fname)).replace("\\","/")
                     for fname in glob(d + "/*")
                     if splitext(fname)[-1].lower() == "."+extension])
     return files
+
+    
+    

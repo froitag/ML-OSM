@@ -11,7 +11,7 @@ import algo
 from numpy import sqrt
 
 #DATASETPATH = 'data/train_real/'
-DATASETPATH = 'C:/Users/andre/Dropbox/ML-HA/Final Project/patches48'
+DATASETPATH = 'C:/Users/andre/Dropbox/ML-HA/Final Project/grid_patches20'
 SIFT_CODEBOOK = 'data/codebook' 
 SVM_MODEL_FILE = 'data/svm.pkl'
 TMP_DIR = 'data/tmp/train/'#algo.__clear_dir('data/tmp/train/')
@@ -35,7 +35,7 @@ def get_categories(datasetpath):
 
 def get_imgfiles(path):
     all_files = []
-    all_files.extend([join(path, basename(fname))
+    all_files.extend([join(path, basename(fname)).replace("\\","/")
                     for fname in glob(path + "/*")
                     if splitext(fname)[-1].lower() in EXTENSIONS])
     return all_files
@@ -57,9 +57,12 @@ if __name__ == '__main__':
     # list files
     all_files = get_imgfiles(datasetpath)
     all_labels = {}
+    all_weights = {}
     for i in all_files:
         certainty = float(i.replace("\\","/").rpartition("/")[2].partition("_")[0])
-        all_labels[i] = 1 if certainty > 0 else 0
+        label = 1 if certainty > 0 else 0
+        all_labels[i] = label
+        all_weights[i] = certainty if label == 1 else 1-certainty
         
     '''all_labels = {}
     class0 = get_imgfiles("data/train/0/")
@@ -92,5 +95,6 @@ if __name__ == '__main__':
     algo.train_svm(
                    TMP_DIR,
                    all_labels,
-                   SVM_MODEL_FILE
+                   SVM_MODEL_FILE,
+                   all_weights = all_weights
                    )

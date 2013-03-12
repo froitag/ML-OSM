@@ -9,7 +9,7 @@ import algo
 SVM_MODEL_PATH = 'data/svm.pkl'
 CODEBOOK_FILE = 'data/codebook'
 
-DATASETPATH = "C:/Users/andre/Dropbox/ML-HA/Final Project/patches48/test"
+DATASETPATH = "C:/Users/andre/Dropbox/ML-HA/Final Project/grid_patches20/test"
 TMP_DIR = algo.__clear_dir('data/tmp/test/')
 
 
