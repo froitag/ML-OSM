@@ -72,6 +72,7 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
         size[0] / (max_lon - min_lon), 
         size[1] / (max_lat - min_lat)
     );
+    print 'scale ' + str(scale)
     
     # lonlon to 2d pixel
     def ll2px (ll):
@@ -142,18 +143,18 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
                     result += pixel[i, j]       
             coverage = result / float(patch_size**2)
             
-            file_name = '{folder}/{coverage:.3f}_{x:04d}_{y:04d}'.format(
-                    x=x, y=y, coverage=coverage,folder=target_folder
+            file_name = '/{coverage:.3f}_{x:04d}_{y:04d}.png'.format(
+                    x=x, y=y, coverage=coverage
                 )
             
             #save mask for the not extreme cases
             if (coverage != 0.0) and (coverage != 1.0): 
-                patch.save(file_name + '_mask.png')    
+                patch.save(target_folder + '/masks' + file_name)    
             #draw.rectangle(box, fill=0xffffff ) 
             
             #crop patch and save to file
             patch = img_raw.crop(box)
-            patch.save(file_name + '.png')
+            patch.save(target_folder + file_name)
             
     if debug > 0:                
         img.show()  
