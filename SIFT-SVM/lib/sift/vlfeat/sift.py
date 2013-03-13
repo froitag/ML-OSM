@@ -2,6 +2,8 @@ from PIL import Image
 import os
 import numpy as np
 from pylab import *
+import platform
+
 
 
 def process_image(imagename,resultname,params="--edge-thresh 10 --peak-thresh 5"):
@@ -13,9 +15,11 @@ def process_image(imagename,resultname,params="--edge-thresh 10 --peak-thresh 5"
 		im.save('tmp.pgm')
 		imagename = 'tmp.pgm'
 
-	cmmd = str("lib\\sift\\vlfeat\\bin\\sift.exe "+imagename+" --output="+resultname+
-				" "+params)
-	cmmd = str("lib/sift/vlfeat/bin/maci64/sift "+imagename+" --output="+resultname+" "+params)
+	if platform.system() != 'Darwin':
+		cmmd = str("lib\\sift\\vlfeat\\bin\\sift.exe "+imagename+" --output="+resultname+" "+params)
+	else:
+		cmmd = str("lib/sift/vlfeat/bin/maci64/sift "+imagename+" --output="+resultname+" "+params)
+
 	print cmmd
 	os.system(cmmd)
 	print 'processed', imagename, 'to', resultname

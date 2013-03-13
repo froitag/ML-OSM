@@ -4,7 +4,6 @@ Created on 11.03.2013
 @author: andre
 '''
 from os import unlink
-from lib.sift.lowe import sift
 from sklearn.cluster import MiniBatchKMeans
 import numpy as np
 from glob import glob
@@ -15,6 +14,12 @@ import cPickle
 import numpy
 import learn_real
 import os
+
+import platform
+if platform.system() != 'Darwin':
+    from lib.sift.lowe import sift # windows and linux only
+else:
+    from lib.sift.vlfeat import sift
 
 BATCH_SIZE=50
 KM_N_INIT=10
