@@ -12,10 +12,10 @@ import algo
 from numpy import sqrt
 
 #DATASETPATH = 'data/train_real/'
-DATASETPATH = 'C:/Users/andre/Dropbox/ML-HA/Final Project/grid_patches20'
-SIFT_CODEBOOK = 'data/codebook' 
-SVM_MODEL_FILE = 'data/svm.pkl'
-TMP_DIR = 'data/tmp/train/'#algo.__clear_dir('data/tmp/train/')
+DATASETPATH = '../data/patches48'
+SIFT_CODEBOOK = '../data/codebook'
+SVM_MODEL_FILE = '../data/svm.pkl'
+TMP_DIR = '../data/tmp/train/'#algo.__clear_dir('data/tmp/train/')
 
 EXTENSIONS = [".jpg", ".bmp", ".png", ".pgm", ".tif", ".tiff"]
 
