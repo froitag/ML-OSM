@@ -128,7 +128,7 @@ def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None):
     clf = svm.SVC(kernel='rbf') #kernel='linear'    
     clf.gamma = 1
 
-    clf.fit(samples, labels)
+    clf.fit(samples, labels, sample_weight=weights)
     # save the classifier
     with open(FILE_TO_DUMP_TO, 'wb') as fid:
         cPickle.dump(clf, fid)   
