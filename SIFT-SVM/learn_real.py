@@ -5,16 +5,17 @@ Created on 08.03.2013
 '''
 
 from os.path import isdir, basename, join, splitext
+from os import makedirs
 from glob import glob
 import argparse
 import algo
 from numpy import sqrt
 
 #DATASETPATH = 'data/train_real/'
-DATASETPATH = 'C:/Users/andre/Dropbox/ML-HA/Final Project/grid_patches20'
-SIFT_CODEBOOK = 'data/codebook' 
-SVM_MODEL_FILE = 'data/svm.pkl'
-TMP_DIR = 'data/tmp/train/'#algo.__clear_dir('data/tmp/train/')
+DATASETPATH = '../data/patches48'
+SIFT_CODEBOOK = '../data/codebook'
+SVM_MODEL_FILE = '../data/svm.pkl'
+TMP_DIR = '../data/tmp/train/'#algo.__clear_dir('data/tmp/train/')
 
 EXTENSIONS = [".jpg", ".bmp", ".png", ".pgm", ".tif", ".tiff"]
 
@@ -43,6 +44,11 @@ def get_imgfiles(path):
 
 
 if __name__ == '__main__':
+    try:
+        makedirs(TMP_DIR)
+    except:
+        None
+
     algo.__clear_dir(TMP_DIR)
     args = parse_arguments()
     datasetpath = args.d

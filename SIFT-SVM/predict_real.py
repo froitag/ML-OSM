@@ -6,10 +6,10 @@ Created on 08.03.2013
 import algo
 
 ### NEEDS: svm model + codebook file (k-means clusters for generating the histograms)
-SVM_MODEL_PATH = 'data/svm.pkl'
-CODEBOOK_FILE = 'data/codebook'
+SVM_MODEL_PATH = '../data/svm.pkl'
+CODEBOOK_FILE = '../data/codebook'
 
-DATASETPATH = "C:/Users/andre/Dropbox/ML-HA/Final Project/grid_patches20/test"
+DATASETPATH = "../data/patches/test"
 TMP_DIR = algo.__clear_dir('data/tmp/test/')
 
 
