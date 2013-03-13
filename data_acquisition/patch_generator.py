@@ -32,6 +32,7 @@ def get_dop(bbox, size):
         #img.show()
     except:
         print imgIO.read();   
+        raise
     
     return img
 
@@ -156,5 +157,7 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
             
     if debug > 0:                
         img.show()  
+        img.save('dop-annotated.png')
         bmap.show() 
+        bmap.save('bmap.png')
     

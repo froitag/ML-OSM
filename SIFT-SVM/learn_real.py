@@ -5,6 +5,7 @@ Created on 08.03.2013
 '''
 
 from os.path import isdir, basename, join, splitext
+from os import makedirs
 from glob import glob
 import argparse
 import algo
@@ -43,6 +44,11 @@ def get_imgfiles(path):
 
 
 if __name__ == '__main__':
+    try:
+        makedirs(TMP_DIR)
+    except:
+        None
+
     algo.__clear_dir(TMP_DIR)
     args = parse_arguments()
     datasetpath = args.d
