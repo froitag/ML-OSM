@@ -149,8 +149,8 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
                 )
             
             #save mask for the not extreme cases
-            if (coverage != 0.0) and (coverage != 1.0): 
-                patch.save(target_folder + '/masks' + file_name)    
+            #if (coverage != 0.0) and (coverage != 1.0):
+            #    patch.save(target_folder + '/masks' + file_name)
             #draw.rectangle(box, fill=0xffffff ) 
             
             #crop patch and save to file
