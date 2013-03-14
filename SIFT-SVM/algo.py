@@ -122,7 +122,7 @@ def compute_histograms(sift_features_dir, codebook_file, DUMP_TO_DIR, batch_size
     return
 
 
-def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None):
+def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None, C=1000, gamma=1):
     files = __get_histogram_batches_from_dir(histogram_dir)
     
     samples = []
@@ -134,11 +134,12 @@ def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None):
             hbatch = cPickle.load(f)
         for h in hbatch:
             samples.append(hbatch[h])
-            labels.append(all_labels[h])
-            weights.append(all_weights[h] if all_weights!=None and h in all_weights else 1)
+            labels.append(all_labels[os.path.basename(h)])
+            weights.append(all_weights[os.path.basename(h)] if all_weights!=None and h in all_weights else 1)
         
-    clf = svm.SVC(kernel='rbf') #kernel='linear'    
-    clf.gamma = 1
+    clf = svm.SVC(kernel='rbf') #kernel='linear'
+    clf.C = C    
+    clf.gamma = gamma
 
     clf.fit(samples, labels)#, sample_weight=weights)
     # save the classifier
@@ -192,6 +193,13 @@ def __compute_histogram(codebook, descriptors):
         print "OH OH"
     return histogram_of_words
 
+def __try_mkdirs(folder):
+    try:
+        os.makedirs(folder)
+    except:
+        None
+    return folder
+    
 def __clear_dir(folder):
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)

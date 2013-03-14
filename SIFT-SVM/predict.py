@@ -9,8 +9,8 @@ import patch_generator
 from PIL import Image, ImageDraw
 
 ### NEEDS: svm model + codebook file (k-means clusters for generating the histograms)
-SVM_MODEL_PATH = '../data/svm.pkl'
-CODEBOOK_FILE = '../data/codebook'
+SVM_MODEL_FILE = '../data/svm.pkl'
+SIFT_CODEBOOK_FILE = '../data/codebook'
 
 DATASET_DIR = '../data/patches/test'
 TMP_DIR = '../data/tmp/test/'
@@ -44,7 +44,7 @@ if (__name__ == "__main__"):
     print "## generating patches from '" + SATELLITE_IMG_TMP + "' (" + str(SATELLITE_IMG_SIZE[0])+"x"+str(SATELLITE_IMG_SIZE[1]) + "; " + str(SATELLITE_IMG_BBOX) + ")"
     patch_generator.generate_patches(SATELLITE_IMG_BBOX, SATELLITE_IMG_SIZE, 
         patch_size=48, 
-        offset_steps=1,
+        offset_steps=2,
         target_folder=DATASET_DIR,
         force_refresh=False,
         tmp_img_file=SATELLITE_IMG_TMP,
@@ -54,7 +54,7 @@ if (__name__ == "__main__"):
     # predict
     print "---------------------"
     print "## predicting"
-    predictions = algo.predict(SVM_MODEL_PATH, CODEBOOK_FILE, DATASET_DIR, TMP_DIR)
+    predictions = algo.predict(SVM_MODEL_FILE, SIFT_CODEBOOK_FILE, DATASET_DIR, TMP_DIR)
     
     
     # generate visualization
