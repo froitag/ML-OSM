@@ -3,7 +3,6 @@
 	<name>SIFT-SVM</name>
 	<comment></comment>
 	<projects>
-		<project>data_acquisition</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
