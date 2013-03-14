@@ -12,13 +12,13 @@ import scipy.cluster.vq as vq
 from sklearn import svm
 import cPickle
 import numpy
-import learn_real
 import os
 
 import platform
 if platform.system() != 'Darwin':
     from lib.sift.lowe import sift # windows and linux only
 else:
+    print "vlfeat"
     from lib.sift.vlfeat import sift
 
 BATCH_SIZE=50
@@ -27,6 +27,8 @@ KM_MAX_NO_IMPROVEMENT=10
 
 SIFTBATCH_EXTENSION="siftbatch"
 HISTOGRAMBATCH_EXTENSION="histogrambatch"
+
+EXTENSIONS = [".jpg", ".bmp", ".png", ".pgm", ".tif", ".tiff"]
 
 
 def extract_features(image_files, DIR_TO_DUMP_TO, batch_size=BATCH_SIZE):
@@ -38,7 +40,7 @@ def extract_features(image_files, DIR_TO_DUMP_TO, batch_size=BATCH_SIZE):
     imgCounter = 0
     featureCount = 0
     for img in image_files:
-        batch[img] = __extract_features_from_image_file(img)
+        batch[img] = __extract_features_from_image_file(img, sift_tmp_file=DIR_TO_DUMP_TO+"/tmp.sift")
         featureCount += batch[img].shape[0]
         imgCounter += 1
         
@@ -50,6 +52,11 @@ def extract_features(image_files, DIR_TO_DUMP_TO, batch_size=BATCH_SIZE):
     if batch:
         with open(DIR_TO_DUMP_TO+"/batch"+str(batchCounter+1)+"."+SIFTBATCH_EXTENSION, "wb") as f:
             cPickle.dump(batch, f, protocol=cPickle.HIGHEST_PROTOCOL)
+
+    try:
+        os.remove("tmp.pgm")
+    except:
+        None
 
     return featureCount
 
@@ -133,14 +140,14 @@ def train_svm(histogram_dir, all_labels, FILE_TO_DUMP_TO, all_weights=None):
     clf = svm.SVC(kernel='rbf') #kernel='linear'    
     clf.gamma = 1
 
-    clf.fit(samples, labels, sample_weight=weights)
+    clf.fit(samples, labels)#, sample_weight=weights)
     # save the classifier
     with open(FILE_TO_DUMP_TO, 'wb') as fid:
         cPickle.dump(clf, fid)   
 
 def predict(svm_model_file, codebook_file, img_dir, tmp_dir):
     # list all files
-    files = learn_real.get_imgfiles(img_dir)
+    files = get_imgfiles(img_dir)
     
     # extract sift features
     extract_features(files, tmp_dir)
@@ -164,11 +171,10 @@ def predict(svm_model_file, codebook_file, img_dir, tmp_dir):
 
 
 ''' HELPERS '''
-def __extract_features_from_image_file(image_file):
-    features_fname = 'tmp.sift'
-    sift.process_image(image_file, features_fname)
-    _, descriptors = sift.read_features_from_file(features_fname)
-    unlink(features_fname)
+def __extract_features_from_image_file(image_file, sift_tmp_file='tmp.sift'):
+    sift.process_image(image_file, sift_tmp_file)
+    _, descriptors = sift.read_features_from_file(sift_tmp_file)
+    unlink(sift_tmp_file)
     return descriptors
 
 def __compute_histogram(codebook, descriptors):
@@ -205,4 +211,10 @@ def __get_files_from_dir(d, extension):
     return files
 
     
+def get_imgfiles(path):
+    all_files = []
+    all_files.extend([join(path, basename(fname)).replace("\\","/")
+                    for fname in glob(path + "/*")
+                    if splitext(fname)[-1].lower() in EXTENSIONS])
+    return all_files
     
