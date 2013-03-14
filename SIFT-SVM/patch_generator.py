@@ -9,7 +9,7 @@ import os
 import sys
 
 
-debug = 0
+debug = 1
 
 def get_dop(bbox, size):
     from owslib.wms import WebMapService
@@ -36,20 +36,26 @@ def get_dop(bbox, size):
     
     return img
 
-def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_refresh = False, offset_steps=1, tmp_img_file = "dop.png", tmp_dir = "."):
+def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_refresh = False, offset_steps=1, data_folder='.'):
 
-    if not os.path.exists(tmp_img_file) or force_refresh:
+    try: os.mkdir(target_folder);
+    except: None
+    try: os.mkdir(data_folder)
+    except: None
+
+
+    if not os.path.exists(data_folder + '/dop.png') or force_refresh:
         print "getting dop image from wms server"
         img = get_dop(bbox, size)
-        img.save(tmp_img_file)
+        img.save(data_folder + '/dop.png')
     
     else:
         print "loading dop from disk"
-        img = Image.open(tmp_img_file)
+        img = Image.open(data_folder + '/dop.png')
     
     (min_lon, min_lat, max_lon, max_lat) = bbox
      
-    if not os.path.exists(tmp_dir + "/osm-data.json") or force_refresh:
+    if not os.path.exists(data_folder + '/osm-data.json') or force_refresh:
 
         query = '[out:json];way["building"](' + str(min_lat) + ',' + str(min_lon) + ',' + str(max_lat) + ',' + str(max_lon) + ');out qt body;>;out skel;'
         import urllib
@@ -57,12 +63,12 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
         
         import urllib2       
         json_file = urllib2.urlopen(url)
-        f = open(tmp_dir + '/osm-data.json', 'w')
+        f = open(data_folder + '/osm-data.json', 'w')
         f.write(json_file.read())
         f.close()
     
     
-    json_file = open(tmp_dir + '/osm-data.json', 'r')
+    json_file = open(data_folder + '/osm-data.json', 'r')
     print "parsing json document"
     import json
     data = json.load(json_file)
@@ -97,21 +103,11 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
         else:
             raise Exception("unexpected osm element type")
     
-    try:
-        os.mkdir(target_folder)
-    except:
-        None
-        
-    try:
-        os.mkdir(target_folder+"/masks")
-    except:
-        None
-    
     
     if debug > 0:
         img_raw = img.copy()
         draw = ImageDraw.Draw(img) 
-        import shapely.geometry
+        #import shapely.geometry
     else:
         img_raw = img
        
@@ -123,8 +119,8 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
     for building in buildings:
         ring = [nodes[node_id] for node_id in building['nodes']];
         if debug > 0:
-            area = shapely.geometry.Polygon(ring)
-            draw.rectangle(area.bounds, outline='blue') 
+            #area = shapely.geometry.Polygon(ring)
+            #draw.rectangle(area.bounds, outline='blue')
             draw.polygon(ring, outline='red')
         bdraw.polygon(ring, fill=1)
         #center = area.representative_point()
@@ -153,17 +149,18 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
                 )
             
             #save mask for the not extreme cases
-            if (coverage != 0.0) and (coverage != 1.0): 
-                patch.save(target_folder + '/masks' + file_name)    
+            #if (coverage != 0.0) and (coverage != 1.0):
+            #    patch.save(target_folder + '/masks' + file_name)
             #draw.rectangle(box, fill=0xffffff ) 
             
             #crop patch and save to file
             patch = img_raw.crop(box)
             patch.save(target_folder + file_name)
             
-    if debug > 0:                
+    if debug >= 2:
         img.show()  
-        img.save('dop-annotated.png')
         bmap.show() 
-        bmap.save('bmap.png')
+    if debug >= 1:
+        img.save(data_folder + '/dop-annotated.png')
+        bmap.save(data_folder + '/bmap.png')
     
