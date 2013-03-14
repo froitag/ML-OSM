@@ -10,6 +10,7 @@ from numpy import sqrt
 import patch_generator
 import random
 import os
+import json
 
 
 ''' CONFIG '''
@@ -22,13 +23,14 @@ VALIDATIONSET_DIR = DATASET_DIR + "/validate"
 
 SIFT_CODEBOOK_FILE = '../data/codebook'
 SVM_MODEL_FILE = '../data/svm.pkl'
+HYPERPARAMETERS_FILE = '../data/svm.pkl.info.json'
 
 SATELLITE_IMG_BBOX=(11.60339,48.17708,11.61304,48.18326) ; SATELLITE_IMG_SIZE=(1500, 1000) ; SATELLITE_IMG_TMP="dopA.png" # between Grasmeier and Crailsheimerstr.
 #SATELLITE_IMG_BBOX =(11.59221,48.17038,11.61233,48.18380) ; SATELLITE_IMG_SIZE=(2000, 2000) ; SATELLITE_IMG_TMP="dopB.png" # bigger as above.
 #important: a must be smaller than c, b must be smaller then d
 
 
-HYPERPARAMETERS_OPTIONS = {
+"""HYPERPARAMETERS_OPTIONS = {
     "patch_size": [48, 96],
     "patch_offset": [1,2],
     "codebook_size": [          # codebook size depending on overall sift key-point count
@@ -39,7 +41,8 @@ HYPERPARAMETERS_OPTIONS = {
     "svm_c": [10, 100, 1000],
     "svm_gamma": [0.1, 0.2, 0.5, 1]
 }
-"""HYPERPARAMETERS_OPTIONS = {
+"""
+HYPERPARAMETERS_OPTIONS = {
     "patch_size": [48],
     "patch_offset": [1],
     "codebook_size": [          # codebook size depending on overall sift key-point count
@@ -47,7 +50,7 @@ HYPERPARAMETERS_OPTIONS = {
      ],
     "svm_c": [1000],
     "svm_gamma": [1]
-}"""
+}
 
 
 
@@ -57,7 +60,8 @@ def parse_arguments():
     parser.add_argument('-d', help='path to the dataset', required=False, default=DATASET_DIR)
     args = parser.parse_args()
     return args
-
+def __gen_info_filename(i, performance):
+    return SVM_MODEL_FILE+str(i)+"-"+("{0:.2f}".format(performance['performance']["TPR/FPR"]))+".info.json"
 
 
 
@@ -128,7 +132,10 @@ if __name__ == '__main__':
                     all_files.extend(algo.get_imgfiles(VALIDATIONSET_DIR))
                     
                     for f in all_files:
-                        os.rename(f, DATASET_DIR + "/" + os.path.basename(f))
+                        try:
+                            os.rename(f, DATASET_DIR + "/" + os.path.basename(f))
+                        except:
+                            print "ERROR, file already exists: " + f + " -> " + DATASET_DIR + "/" + os.path.basename(f)
                     
         
                 # list files
@@ -159,13 +166,19 @@ if __name__ == '__main__':
                     if i < dataset_size:
                         rnd = random.randint(1, dataset_size)
                         forTraining = 1 if (rnd > validationset_size) else 0
-                    os.rename(f, (TRAININGSET_DIR if forTraining else VALIDATIONSET_DIR) + "/" + os.path.basename(f))
+                    try:
+                        os.rename(f, (TRAININGSET_DIR if forTraining else VALIDATIONSET_DIR) + "/" + os.path.basename(f))
+                    except:
+                        print "ERROR, file already exists: " + f + " -> " + (TRAININGSET_DIR if forTraining else VALIDATIONSET_DIR) + "/" + os.path.basename(f)
                     i += 1 if forTraining else 0
                 validation_files = algo.get_imgfiles(VALIDATIONSET_DIR)
         
                 for j in range(i, trainingset_size):
                     index = j - i
-                    os.rename(validation_files[index], TRAININGSET_DIR + "/" + os.path.basename(validation_files[index]))
+                    try:
+                        os.rename(validation_files[index], TRAININGSET_DIR + "/" + os.path.basename(validation_files[index]))
+                    except:
+                        print "ERROR, file already exists: " + validation_files[index] + " -> " + TRAININGSET_DIR + "/" + os.path.basename(validation_files[index])
             
                 training_files = algo.get_imgfiles(TRAININGSET_DIR)
                 validation_files = algo.get_imgfiles(VALIDATIONSET_DIR)
@@ -184,14 +197,17 @@ if __name__ == '__main__':
                 # generate codebook
                 print "---------------------"
                 print "## generating bag-of-words codebook"
+                currentCodebook = SIFT_CODEBOOK_FILE+str(len(performances))
                 clusterCount = hyperparameters['codebook_size'](featureCount)
+                hyperparameters['codebook_size'] = clusterCount
                 performance['codebook_size'] = clusterCount
                 algo.gen_codebook(
                                   TMP_DIR_TRAINING, 
                                   clusterCount,
-                                  SIFT_CODEBOOK_FILE,
+                                  currentCodebook,
                                   batch_size = algo.BATCH_SIZE if algo.BATCH_SIZE >= clusterCount else clusterCount)
-                print "saved codebook to '" + SIFT_CODEBOOK_FILE + "'"
+                print "saved codebook to '" + currentCodebook + "'"
+                performance['codebook'] = currentCodebook
                 
                 
                 # generate histograms
@@ -199,7 +215,7 @@ if __name__ == '__main__':
                 print "## generating histograms of the training examples"
                 algo.compute_histograms(
                                         TMP_DIR_TRAINING,
-                                        SIFT_CODEBOOK_FILE,
+                                        currentCodebook,
                                         TMP_DIR_TRAINING)
                 
                 
@@ -247,7 +263,7 @@ if __name__ == '__main__':
                                 I += 1
                         
                         algo.__clear_dir(TMP_DIR_VALIDATION)
-                        predictions = algo.predict(SVM_MODEL_FILE+str(len(performances)), SIFT_CODEBOOK_FILE, VALIDATIONSET_DIR, TMP_DIR_VALIDATION)
+                        predictions = algo.predict(SVM_MODEL_FILE+str(len(performances)), currentCodebook, VALIDATIONSET_DIR, TMP_DIR_VALIDATION)
                         for f,p in predictions.items():
                             if p[0] == 1:
                                 if all_labels[os.path.basename(f)] == 1:
@@ -272,6 +288,10 @@ if __name__ == '__main__':
                             "FPR": FPR,
                             "TPR/FPR": (TPR/FPR) if FPR!=0 else float("inf")
                         }
+                        
+                        with open(__gen_info_filename(len(performances), performance), "w") as f:
+                            f.write(json.dumps(performance))
+                            
                         performances.append(performance)
     
     
@@ -280,16 +300,31 @@ if __name__ == '__main__':
     for (i,p) in enumerate(performances):
         if p['performance']['TPR/FPR'] > performances[best]['performance']['TPR/FPR']:
             best = i
-    os.remove(SVM_MODEL_FILE)
+    print ""
+    print ""
+    print "FINISHED"
+    print "found best classifier: #" + str(best) + " out of " + str(len(performances))
+    print "dataset size: " + str(performances[best]['trainingset_size']) + " training + " + str(performances[best]['validationset_size']) + " validation = " + str(performances[best]['dataset_size']) + " total"
+    print "hyper-parameters: " + str(performances[best]['hyperparameters'])
+    
+    algo.__try_remove(SVM_MODEL_FILE)
     os.rename(SVM_MODEL_FILE+str(best), SVM_MODEL_FILE)
-    for i in range(len(performances)):
+    algo.__try_remove(SIFT_CODEBOOK_FILE)
+    os.rename(performances[best]['codebook'], SIFT_CODEBOOK_FILE)
+    algo.__try_remove(HYPERPARAMETERS_FILE)
+    os.rename(__gen_info_filename(best, performances[best]), HYPERPARAMETERS_FILE)
+    """for i in range(len(performances)):
         if i != best:
-            os.remove(SVM_MODEL_FILE+str(i))
+            algo.__try_remove(SVM_MODEL_FILE+str(i))
+            algo.__try_remove(performances[i]['codebook'])
+            algo.__try_remove(__gen_info_filename(i, performances[i]))"""
     
     
     # finish
     print ""
     print ""
     print "TRAINING SUCCEEDED"
+    print "saved codebook to '" + SIFT_CODEBOOK_FILE + "'"
     print "saved svm to '" + SVM_MODEL_FILE + "'"
+    print "saved hyperparameters etc to '" + HYPERPARAMETERS_FILE + "'"
     print performances

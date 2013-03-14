@@ -193,6 +193,13 @@ def __compute_histogram(codebook, descriptors):
         print "OH OH"
     return histogram_of_words
 
+def __try_remove(f):
+    try:
+        os.remove(f)
+    except:
+        None
+    return f
+
 def __try_mkdirs(folder):
     try:
         os.makedirs(folder)
