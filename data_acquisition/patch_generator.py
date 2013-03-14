@@ -36,20 +36,26 @@ def get_dop(bbox, size):
     
     return img
 
-def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_refresh = False, offset_steps=1):
+def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_refresh = False, offset_steps=1, data_folder='.'):
 
-    if not os.path.exists("dop.png") or force_refresh:
+    try: os.mkdir(target_folder);
+    except: None
+    try: os.mkdir(data_folder)
+    except: None
+
+
+    if not os.path.exists(data_folder + '/dop.png') or force_refresh:
         print "getting dop image from wms server"
         img = get_dop(bbox, size)
-        img.save("dop.png")
+        img.save(data_folder + '/dop.png')
     
     else:
         print "loading dop from disk"
-        img = Image.open("dop.png")
+        img = Image.open(data_folder + '/dop.png')
     
     (min_lon, min_lat, max_lon, max_lat) = bbox
      
-    if not os.path.exists("osm-data.json") or force_refresh:
+    if not os.path.exists(data_folder + '/osm-data.json') or force_refresh:
 
         query = '[out:json];way["building"](' + str(min_lat) + ',' + str(min_lon) + ',' + str(max_lat) + ',' + str(max_lon) + ');out qt body;>;out skel;'
         import urllib
@@ -57,12 +63,12 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
         
         import urllib2       
         json_file = urllib2.urlopen(url)
-        f = open('osm-data.json', 'w')
+        f = open(data_folder + '/osm-data.json', 'w')
         f.write(json_file.read())
         f.close()
     
     
-    json_file = open('osm-data.json', 'r')
+    json_file = open(data_folder + '/osm-data.json', 'r')
     print "parsing json document"
     import json
     data = json.load(json_file)
@@ -96,11 +102,6 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
             nodes[int(element['id'])] = ll2px(lonlat)
         else:
             raise Exception("unexpected osm element type")
-    
-    try:
-        os.mkdir(target_folder)
-    except:
-        None
     
     
     if debug > 0:
@@ -158,7 +159,7 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
             
     if debug > 0:                
         img.show()  
-        img.save('dop-annotated.png')
         bmap.show() 
-        bmap.save('bmap.png')
+        img.save(data_folder + '/dop-annotated.png')
+        bmap.save(data_folder + '/bmap.png')
     
