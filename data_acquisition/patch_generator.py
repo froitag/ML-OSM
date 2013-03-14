@@ -157,9 +157,10 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
             patch = img_raw.crop(box)
             patch.save(target_folder + file_name)
             
-    if debug > 0:                
+    if debug >= 2:
         img.show()  
         bmap.show() 
+    if debug >= 1:
         img.save(data_folder + '/dop-annotated.png')
         bmap.save(data_folder + '/bmap.png')
     
