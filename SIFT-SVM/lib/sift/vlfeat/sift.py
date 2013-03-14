@@ -3,6 +3,7 @@ import os
 import numpy as np
 from pylab import *
 import platform
+import sys
 
 
 
@@ -20,10 +21,10 @@ def process_image(imagename,resultname,params="--edge-thresh 10 --peak-thresh 5"
 	else:
 		cmmd = str("lib/sift/vlfeat/bin/maci64/sift "+imagename+" --output="+resultname+" "+params)
 
-	print cmmd
+	#print cmmd
 	os.system(cmmd)
-	print 'processed', imagename, 'to', resultname
-
+	#print 'processed', imagename, 'to', resultname
+	sys.stdout.write('.')
 
 def read_features_from_file(filename):
 	""" read feature properties and return in matrix form"""
