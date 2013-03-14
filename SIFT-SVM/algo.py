@@ -166,6 +166,11 @@ def predict(svm_model_file, codebook_file, img_dir, tmp_dir):
             hbatch = cPickle.load(f)
         for img in hbatch:
             predictions[img] = crf.predict(hbatch[img])
+            
+    # add 0 predictions for images where SIFT didn't find features
+    for f in files:
+        if not(f in predictions):
+            predictions[f] = [0]
     
     return predictions
 

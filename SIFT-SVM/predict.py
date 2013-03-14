@@ -47,7 +47,8 @@ if (__name__ == "__main__"):
         offset_steps=1,
         target_folder=DATASET_DIR,
         force_refresh=False,
-        tmp_file=SATELLITE_IMG_TMP
+        tmp_img_file=SATELLITE_IMG_TMP,
+        tmp_dir=TMP_DIR
     )
     
     # predict
