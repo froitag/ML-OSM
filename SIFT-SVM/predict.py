@@ -17,10 +17,10 @@ HYPERPARAMETERS_FILE = '../data/svm.pkl.info.json'
 DATASET_DIR = '../data/patches/test'
 TMP_DIR = '../data/tmp/test/'
 
-SATELLITE_IMG_BBOX=(11.60339,48.17708,11.61304,48.18326) ; SATELLITE_IMG_SIZE=(1500, 1000) ; SATELLITE_IMG_TMP="dopA.png" # between Grasmeier and Crailsheimerstr.
-SATELLITE_IMG_VISUALIZATION_INPUT="dopA-annotated.png"
+IMG_BBOX=(11.60339,48.17708,11.61304,48.18326) ; IMG_SIZE=(1500, 1000) ; IMG_NAME="dopA" # between Grasmeier and Crailsheimerstr.
+SATELLITE_IMG_VISUALIZATION_INPUT="dopA/dop-annotated.png"
 SATELLITE_IMG_VISUALIZATION_OUTPUT="../data/dopA-predictions.png"
-#SATELLITE_IMG_BBOX =(11.59221,48.17038,11.61233,48.18380) ; SATELLITE_IMG_SIZE=(2000, 2000) ; SATELLITE_IMG_TMP="dopB.png" # bigger as above.
+#IMG_BBOX =(11.59221,48.17038,11.61233,48.18380) ; IMG_SIZE=(2000, 2000) ; SATELLITE_IMG_TMP="dopB.png" # bigger as above.
 #SATELLITE_IMG_VISUALIZATION_INPUT="dopB-annotated.png"
 #SATELLITE_IMG_VISUALIZATION_OUTPUT="dopB-predictions.png"
 #important: a must be smaller than c, b must be smaller then d
@@ -46,15 +46,15 @@ if (__name__ == "__main__"):
     
     # generate patches
     print "---------------------"
-    print "## generating patches from '" + SATELLITE_IMG_TMP + "' (" + str(SATELLITE_IMG_SIZE[0])+"x"+str(SATELLITE_IMG_SIZE[1]) + "; " + str(SATELLITE_IMG_BBOX) + ")"
-    patch_generator.generate_patches(SATELLITE_IMG_BBOX, SATELLITE_IMG_SIZE, 
+    print "## generating patches from '" + IMG_NAME + "' (" + str(IMG_SIZE[0])+"x"+str(IMG_SIZE[1]) + "; " + str(IMG_BBOX) + ")"
+    patch_generator.generate_patches(IMG_BBOX, IMG_SIZE,
         patch_size=params['hyperparameters']['patch_size'], 
         offset_steps=params['hyperparameters']['patch_offset'],
         target_folder=DATASET_DIR,
         force_refresh=False,
-        tmp_img_file=SATELLITE_IMG_TMP,
-        tmp_dir=TMP_DIR
+        data_folder=IMG_NAME,
     )
+    print ""
     
     # predict
     print "---------------------"

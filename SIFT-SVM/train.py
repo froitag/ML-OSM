@@ -14,6 +14,11 @@ import json
 
 
 ''' CONFIG '''
+IMG_BBOX=(11.60339,48.17708,11.61304,48.18326) ; IMG_SIZE=(1500, 1000) ; IMG_NAME="dopA" # between Grasmeier and Crailsheimerstr.
+#IMG_BBOX =(11.59221,48.17038,11.61233,48.18380) ; IMG_SIZE=(2000, 2000) ; IMG_NAME="dopB" # bigger as above.
+#important: a must be smaller than c, b must be smaller then d
+
+
 TMP_DIR_TRAINING = '../data/tmp/train'
 TMP_DIR_VALIDATION = '../data/tmp/validate'
 
@@ -25,9 +30,6 @@ SIFT_CODEBOOK_FILE = '../data/codebook'
 SVM_MODEL_FILE = '../data/svm.pkl'
 HYPERPARAMETERS_FILE = '../data/svm.pkl.info.json'
 
-SATELLITE_IMG_BBOX=(11.60339,48.17708,11.61304,48.18326) ; SATELLITE_IMG_SIZE=(1500, 1000) ; SATELLITE_IMG_TMP="dopA.png" # between Grasmeier and Crailsheimerstr.
-#SATELLITE_IMG_BBOX =(11.59221,48.17038,11.61233,48.18380) ; SATELLITE_IMG_SIZE=(2000, 2000) ; SATELLITE_IMG_TMP="dopB.png" # bigger as above.
-#important: a must be smaller than c, b must be smaller then d
 
 
 """HYPERPARAMETERS_OPTIONS = {
@@ -108,14 +110,13 @@ if __name__ == '__main__':
         
             # generate patches
             print "---------------------"
-            print "## generating patches from '" + SATELLITE_IMG_TMP + "' (" + str(SATELLITE_IMG_SIZE[0])+"x"+str(SATELLITE_IMG_SIZE[1]) + "; " + str(SATELLITE_IMG_BBOX) + ")"
-            patch_generator.generate_patches(SATELLITE_IMG_BBOX, SATELLITE_IMG_SIZE, 
+            print "## generating patches from '" + IMG_NAME + "' (" + str(IMG_SIZE[0])+"x"+str(IMG_SIZE[1]) + "; " + str(IMG_BBOX) + ")"
+            patch_generator.generate_patches(IMG_BBOX, IMG_SIZE,
                 patch_size=hyperparameters['patch_size'], 
                 offset_steps=hyperparameters['patch_offset'],
                 target_folder=DATASET_DIR,
                 force_refresh=False,
-                tmp_img_file=SATELLITE_IMG_TMP,
-                tmp_dir=TMP_DIR_TRAINING
+                data_folder=IMG_NAME
             )
             print ""
                     
