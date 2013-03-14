@@ -106,7 +106,7 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
     if debug > 0:
         img_raw = img.copy()
         draw = ImageDraw.Draw(img) 
-        import shapely.geometry
+        #import shapely.geometry
     else:
         img_raw = img
        
@@ -118,8 +118,8 @@ def generate_patches(bbox, size, patch_size, target_folder = 'patches', force_re
     for building in buildings:
         ring = [nodes[node_id] for node_id in building['nodes']];
         if debug > 0:
-            area = shapely.geometry.Polygon(ring)
-            draw.rectangle(area.bounds, outline='blue') 
+            #area = shapely.geometry.Polygon(ring)
+            #draw.rectangle(area.bounds, outline='blue')
             draw.polygon(ring, outline='red')
         bdraw.polygon(ring, fill=1)
         #center = area.representative_point()
