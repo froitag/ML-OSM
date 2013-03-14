@@ -29,15 +29,9 @@ SATELLITE_IMG_VISUALIZATION_OUTPUT="../data/dopA-predictions.png"
 if (__name__ == "__main__"):
     
     # init
-    try:
-        os.makedirs(DATASET_DIR)
-    except:
-        None
+    algo.__try_mkdirs(DATASET_DIR)
     algo.__clear_dir(DATASET_DIR)
-    try:
-        os.makedirs(TMP_DIR)
-    except:
-        None
+    algo.__try_mkdirs(TMP_DIR)
     algo.__clear_dir(TMP_DIR)
     
     with open(HYPERPARAMETERS_FILE, "r") as f:
@@ -65,7 +59,6 @@ if (__name__ == "__main__"):
     # generate visualization
     print "---------------------"
     print "## generating visualization"
-    threshold = 0.4
     
     img = Image.open(SATELLITE_IMG_VISUALIZATION_INPUT)
     overlay = Image.new('RGB', img.size, 0)
@@ -79,9 +72,9 @@ if (__name__ == "__main__"):
         x = int(x); y = int(y)
         print '{coverage}: {is_building}'.format(coverage=coverage, is_building=is_building[0])
         if is_building[0] == 1:
-            draw.rectangle([x,y,x+48, y+48], fill='violet')
+            draw.rectangle([x,y,x+48, y+48], fill='violet', outline='grey')
         else:
-            draw.rectangle([x,y,x+48, y+48], fill='yellow')
+            draw.rectangle([x,y,x+48, y+48], fill='yellow', outline='grey')
     
     combined = Image.blend(img, overlay, 0.3) 
     combined.show()  
